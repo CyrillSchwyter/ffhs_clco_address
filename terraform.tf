@@ -9,6 +9,11 @@ variable sqladmin_username {
   default = "sqladmin"
 }
 
+provider "azuread" {
+  version         = "~>0.3"
+  subscription_id = "${var.subscription_id}"
+}
+
 provider "azurerm" {
   version         = "~>1.27"
   subscription_id = "${var.subscription_id}"
@@ -26,7 +31,12 @@ resource "azurerm_resource_group" "default" {
   }
 }
 
-resource "random_string" "password" {
+resource "random_string" "password_sql" {
+  length  = 36
+  special = true
+}
+
+resource "random_string" "password_sp" {
   length  = 36
   special = true
 }
@@ -45,7 +55,7 @@ resource "azurerm_sql_server" "spring" {
   location                     = "${azurerm_resource_group.default.location}"
   version                      = "12.0"
   administrator_login          = "${var.sqladmin_username}"
-  administrator_login_password = "${random_string.password.result}"
+  administrator_login_password = "${random_string.password_sql.result}"
 }
 
 output "administrator_login" {
@@ -62,6 +72,35 @@ resource "azurerm_sql_database" "spring" {
   location            = "${azurerm_resource_group.default.location}"
   server_name         = "${azurerm_sql_server.spring.name}"
   edition             = "Basic"
+}
+
+resource "azuread_application" "address-app" {
+  name  = "address-app"
+}
+
+resource "azuread_service_principal" "address-app" {
+  application_id = "${azuread_application.address-app.application_id}"
+  tags = ["ese"]
+}
+
+resource "azuread_service_principal_password" "address-app-pass" {
+  service_principal_id = "${azuread_service_principal.address-app.id}"
+  value                = "${random_string.password_sp.result}"
+  end_date             = "${timeadd(timestamp(), "100h")}"
+}
+
+resource "azurerm_role_assignment" "address-app-role" {
+  scope                = "${azurerm_app_service.spring.id}"
+  role_definition_name = "Contributor"
+  principal_id         = "${azuread_service_principal.address-app.id}"
+}
+
+output "maven-client" {
+  value = "${azuread_application.address-app.application_id}"
+}
+
+output "maven-key" {
+  value = "${random_string.password_sp.result}"
 }
 
 resource "azurerm_app_service_plan" "small" {
@@ -98,8 +137,20 @@ resource "azurerm_app_service" "spring" {
   connection_string {
     name  = "Database"
     type  = "SQLServer"
-    value = "jdbc:sqlserver://${azurerm_sql_server.spring.name}.database.windows.net:1433;database=${azurerm_sql_database.spring.name};user=${var.sqladmin_username}@${azurerm_sql_server.spring.name};password=${random_string.password.result};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;"
+    value = "jdbc:sqlserver://${azurerm_sql_server.spring.name}.database.windows.net:1433;database=${azurerm_sql_database.spring.name};user=${var.sqladmin_username}@${azurerm_sql_server.spring.name};password=${random_string.password_sql.result};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;"
   }
+}
+
+output "webapp-resource-group" {
+  value = "${azurerm_app_service.spring.resource_group_name}"
+}
+
+output "webapp-region" {
+  value = "${azurerm_app_service.spring.location}"
+}
+
+output "webapp-name" {
+  value = "${azurerm_app_service.spring.name}"
 }
 
 locals {
