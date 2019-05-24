@@ -78,8 +78,8 @@
 						<serverId>azure-auth</serverId>
 					</authentication>
 					<resourceGroup>clco</resourceGroup>
-					<appName>addressen</appName>
-					<region>westus</region>
+					<appName>address-app</appName>
+					<region>westeurope</region>
 					<javaVersion>1.8</javaVersion>
 					<deploymentType>ftp</deploymentType>
 					<stopAppDuringDeployment>true</stopAppDuringDeployment>
