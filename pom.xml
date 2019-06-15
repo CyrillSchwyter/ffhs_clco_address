@@ -123,12 +123,11 @@
             -->
             <id>productionMode</id>
             <activation>
-                <property>
-                    <name>vaadin.productionMode</name>
-                </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <vaadin.productionMode>true</vaadin.productionMode>
+                <activatedProperties>cloud</activatedProperties>
             </properties>
             <dependencies>
                 <dependency>
