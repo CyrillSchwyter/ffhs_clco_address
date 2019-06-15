@@ -3,6 +3,7 @@ package ch.ffhs.elcy.clcoaddress.ui;
 import ch.ffhs.elcy.clcoaddress.model.Address;
 import ch.ffhs.elcy.clcoaddress.repository.AddressRepository;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -16,11 +17,13 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 
-@Route("address")
+@Route("")
 @SpringComponent
 @UIScope
 public class AddressUI extends HorizontalLayout implements AfterNavigationListener {
@@ -32,11 +35,14 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
 
     private Binder<Address> binder;
 
+    private Text labelIpAddress;
 
     public AddressUI(@Autowired AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
 
         addressGrid = new Grid<>(Address.class);
+        labelIpAddress = new Text(getLabelIpAddress());
+        add(labelIpAddress);
         add(initForm());
         add(addressGrid);
         fillGrid();
@@ -96,6 +102,25 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
             addressGrid.setItems(addressList);
         }
 
+
+    }
+
+    private String getLabelIpAddress() {
+
+        InetAddress ip;
+        String ipAddress = "";
+        try {
+
+            ip = InetAddress.getLocalHost();
+            ipAddress = ip.getHostAddress();
+
+        } catch (UnknownHostException e) {
+
+            e.printStackTrace();
+
+        }
+
+        return ipAddress;
     }
 
 
