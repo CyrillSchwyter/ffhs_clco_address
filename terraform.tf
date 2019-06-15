@@ -108,6 +108,8 @@ resource "azurerm_app_service_plan" "small" {
   location            = "${azurerm_resource_group.default.location}"
   resource_group_name = "${azurerm_resource_group.default.name}"
   kind                = "Linux"
+  reserved            =  true
+
 
   sku {
     tier = "Basic"
@@ -123,9 +125,7 @@ resource "azurerm_app_service" "spring" {
 
   site_config {
     always_on              = true
-    java_version           = "1.8"
-    java_container         = "Tomcat"
-    java_container_version = "8.5"
+    linux_fx_version = "JAVA|8-jre8"
   }
 
   app_settings = {
@@ -158,7 +158,7 @@ locals {
 }
 
 resource "azurerm_sql_firewall_rule" "address-app-rule" {
-  count               = "${length(local.outbound_ip)}"
+  count               = 1//"${length(local.outbound_ip)}"
   name                = "allow outbound ip ${local.outbound_ip[count.index]}"
   resource_group_name = "${azurerm_resource_group.default.name}"
   server_name         = "${azurerm_sql_server.spring.name}"
