@@ -36,13 +36,16 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
     private Binder<Address> binder;
 
     private Text labelIpAddress;
+    private Text hostName;
 
     public AddressUI(@Autowired AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
 
         addressGrid = new Grid<>(Address.class);
-        labelIpAddress = new Text(getLabelIpAddress());
+        labelIpAddress = new Text("");
+        hostName = new Text(" ");
         add(labelIpAddress);
+        add(hostName);
         add(initForm());
         add(addressGrid);
         fillGrid();
@@ -101,11 +104,12 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
             addressRepository.findAll().forEach(addressList::add);
             addressGrid.setItems(addressList);
         }
+        getLabelIpAddress();
 
 
     }
 
-    private String getLabelIpAddress() {
+    private void getLabelIpAddress() {
 
         InetAddress ip;
         String ipAddress = "";
@@ -113,6 +117,8 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
 
             ip = InetAddress.getLocalHost();
             ipAddress = ip.getHostAddress();
+            labelIpAddress.setText(ipAddress);
+            hostName.setText(ip.getHostName());
 
         } catch (UnknownHostException e) {
 
@@ -120,7 +126,6 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
 
         }
 
-        return ipAddress;
     }
 
 
