@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@Route("address")
+@Route("")
 @SpringComponent
 @UIScope
 public class AddressUI extends HorizontalLayout implements AfterNavigationListener {
