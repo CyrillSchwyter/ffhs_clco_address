@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -48,7 +49,7 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
         doStupid.addClickListener(event -> {
             doStupidValue = !doStupidValue;
             Runnable runnable = () -> {
-                List<String> strings = new ArrayList<>();
+                List<String> strings = new LinkedList<>();
                 while (doStupidValue) {
                     strings.add(Double.toString(Math.random() * 10000));
                 }
