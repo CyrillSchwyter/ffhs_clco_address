@@ -38,7 +38,7 @@ resource "random_string" "password_sql" {
 
 resource "random_string" "password_sp" {
   length  = 36
-  special = true
+  special = false
 }
 
 resource "random_string" "namesuffix" {
@@ -112,8 +112,9 @@ resource "azurerm_app_service_plan" "small" {
 
 
   sku {
-    tier = "Basic"
-    size = "B1"
+    tier = "PremiumV2"
+    size = "P1v2"
+    capacity = 3
   }
 }
 
@@ -124,7 +125,7 @@ resource "azurerm_app_service" "spring" {
   app_service_plan_id = "${azurerm_app_service_plan.small.id}"
 
   site_config {
-    always_on              = true
+    always_on        = true
     linux_fx_version = "JAVA|8-jre8"
   }
 
@@ -158,10 +159,67 @@ locals {
 }
 
 resource "azurerm_sql_firewall_rule" "address-app-rule" {
-  count               = 1//"${length(local.outbound_ip)}"
+  count               = "${length(local.outbound_ip)}"
   name                = "allow outbound ip ${local.outbound_ip[count.index]}"
   resource_group_name = "${azurerm_resource_group.default.name}"
   server_name         = "${azurerm_sql_server.spring.name}"
   start_ip_address    = "${local.outbound_ip[count.index]}"
   end_ip_address      = "${local.outbound_ip[count.index]}"
+}
+
+resource "azurerm_monitor_autoscale_setting" "address-scale" {
+  name                = "small-Autoscale-312"
+  resource_group_name = "${azurerm_resource_group.default.name}"
+  location            = "${azurerm_resource_group.default.location}"
+  target_resource_id  = "${azurerm_app_service_plan.small.id}"
+
+  profile {
+    name = "small-Autoscale-312"
+
+    capacity {
+      default = "2"
+      minimum = "2"
+      maximum = "${azurerm_app_service_plan.small.maximum_number_of_workers}"
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "CpuPercentage"
+        metric_resource_id = "${azurerm_app_service_plan.small.id}"
+        time_grain         = "PT1M"
+        statistic          = "Average"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+        operator           = "GreaterThan"
+        threshold          = 70
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT10M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "CpuPercentage"
+        metric_resource_id = "${azurerm_app_service_plan.small.id}"
+        time_grain         = "PT1M"
+        statistic          = "Average"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+        operator           = "LessThan"
+        threshold          = 25
+      }
+
+      scale_action {
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT1M"
+      }
+    }
+  }
 }
