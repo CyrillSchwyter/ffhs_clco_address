@@ -32,20 +32,35 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
     private final AddressRepository addressRepository;
 
     private Button saveButton;
+    private Button doStupid;
 
     private Binder<Address> binder;
 
     private Text labelIpAddress;
     private Text hostName;
+    private boolean doStupidValue = false;
 
     public AddressUI(@Autowired AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
 
         addressGrid = new Grid<>(Address.class);
+        doStupid = new Button("DoStupid");
+        doStupid.addClickListener(event -> {
+            doStupidValue = !doStupidValue;
+            Runnable runnable = () -> {
+                List<String> strings = new ArrayList<>();
+                while (doStupidValue) {
+                    strings.add(Double.toString(Math.random() * 10000));
+                }
+            };
+            Thread thread = new Thread(runnable);
+            thread.start();
+
+
+        });
         labelIpAddress = new Text("");
         hostName = new Text(" ");
-        add(labelIpAddress);
-        add(hostName);
+        add(new HorizontalLayout(labelIpAddress, hostName, doStupid));
         add(initForm());
         add(addressGrid);
         fillGrid();
@@ -90,6 +105,7 @@ public class AddressUI extends HorizontalLayout implements AfterNavigationListen
             addressRepository.save(s);
             fillGrid();
         });
+
 
         formLayout.add(nameField, vornameField, strasseField, plzField, stadtField, saveButton);
         return formLayout;
